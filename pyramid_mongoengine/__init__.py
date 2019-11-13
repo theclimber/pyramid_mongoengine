@@ -48,16 +48,28 @@ def _connect_database(config):
     """
     settings = config.registry.settings
 
-    mongo_uri = "mongodb://localhost:27017"
+    mongodb_url = "mongodb://localhost:27017"
     mongodb_name = "test"
+    mongodb_rs = None
 
-    if settings.get("mongo_url"):
-        mongo_uri = settings["mongo_url"]
+    if settings.get("mongodb_url"):
+        mongodb_url = settings["mongodb_url"]
 
     if settings.get("mongodb_name"):
         mongodb_name = settings["mongodb_name"]
 
-    return mongoengine.connect(mongodb_name, host=mongo_uri)
+    if settings.get("mongodb_replicaset"):
+        from pymongo import ReadPreference
+        mongodb_replicaset = settings["mongodb_replicaset"]
+        mongo_connection = mongoengine.connect(
+            mongodb_name,
+            host=mongodb_url,
+            replicaSet=mongodb_replicaset,
+            read_preference=ReadPreference.SECONDARY_PREFERRED)
+    else:
+        mongo_connection = mongoengine.connect(mongodb_name, host=mongodb_url)
+
+    return mongo_connection
 
 
 class MongoEngine(object):
