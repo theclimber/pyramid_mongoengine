@@ -53,18 +53,23 @@ def _connect_database(config):
     mongodb_rs = None
 
     if settings.get("mongodb_url"):
-        mongodb_url = settings["mongodb_url"]
+        mongodb_url = settings["mongo_url"]
 
     if settings.get("mongodb_name"):
         mongodb_name = settings["mongodb_name"]
+        if "?" in mongodb_name:
+            mongodb_rs = mongodb_name.split('?')[1].split("=")[1]
+            mongodb_name = mongodb_name.split('?')[0]
 
     if settings.get("mongodb_replicaset"):
+        mongodb_rs = settings["mongodb_replicaset"]
+
+    if mongodb_rs:
         from pymongo import ReadPreference
-        mongodb_replicaset = settings["mongodb_replicaset"]
         mongo_connection = mongoengine.connect(
             mongodb_name,
             host=mongodb_url,
-            replicaSet=mongodb_replicaset,
+            replicaSet=mongodb_rs,
             read_preference=ReadPreference.SECONDARY_PREFERRED)
     else:
         mongo_connection = mongoengine.connect(mongodb_name, host=mongodb_url)
