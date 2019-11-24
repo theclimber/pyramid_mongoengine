@@ -51,6 +51,8 @@ def _connect_database(config):
     mongodb_url = "mongodb://localhost:27017"
     mongodb_name = "test"
     mongodb_rs = None
+    mongodb_user = None
+    mongodb_pass = None
 
     if settings.get("mongodb_url"):
         mongodb_url = settings["mongo_url"]
@@ -63,16 +65,40 @@ def _connect_database(config):
 
     if settings.get("mongodb_replicaset"):
         mongodb_rs = settings["mongodb_replicaset"]
+    if settings.get("mongodb_user"):
+        mongodb_user = settings["mongodb_user"]
+    if settings.get("mongodb_password"):
+        mongodb_pass = settings["mongodb_password"]
 
-    if mongodb_rs:
+
+    if not mongodb_user and mongodb_rs: # with no user and replicaSet
         from pymongo import ReadPreference
         mongo_connection = mongoengine.connect(
             mongodb_name,
             host=mongodb_url,
             replicaSet=mongodb_rs,
             read_preference=ReadPreference.SECONDARY_PREFERRED)
-    else:
-        mongo_connection = mongoengine.connect(mongodb_name, host=mongodb_url)
+    elif mongodb_user and mongodb_rs: # with user and replicaSet
+        from pymongo import ReadPreference
+        mongo_connection = mongoengine.connect(
+            mongodb_name,
+            username=mongodb_user,
+            password=mongodb_pass,
+            authentication_source='admin',
+            host=mongodb_url,
+            replicaSet=mongodb_rs,
+            read_preference=ReadPreference.SECONDARY_PREFERRED)
+    elif mongodb_user and not mongodb_rs: # with user and without replicaSet
+        mongo_connection = mongoengine.connect(
+            mongodb_name,
+            username=mongodb_user,
+            password=mongodb_pass,
+            authentication_source='admin',
+            host=mongodb_url)
+    else: # without user and without replicaSet
+        mongo_connection = mongoengine.connect(
+            mongodb_name,
+            host=mongodb_url)
 
     return mongo_connection
 
