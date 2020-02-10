@@ -70,13 +70,6 @@ def _connect_database(config):
     if settings.get("mongodb_password"):
         mongodb_pass = settings["mongodb_password"]
 
-    #print(f"""MongoEngine params:
-    #      \t{mongodb_name}
-    #      \t{mongodb_url}
-    #      \t{mongodb_user}
-    #      \t{mongodb_pass}
-    #      \t{mongodb_rs}""")
-
     if not mongodb_user and mongodb_rs: # with no user and replicaSet
         from pymongo import ReadPreference
         mongo_connection = mongoengine.connect(
